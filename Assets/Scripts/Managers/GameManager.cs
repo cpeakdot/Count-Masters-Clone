@@ -8,8 +8,8 @@ namespace CMC
         public static GameManager Instance { get; private set; }
         public static event Action<GameState> OnGameStateChange;
         private GameState gameState;
-
         public GameState getGameState => gameState;
+        public bool useNavMesh = true;
 
         private void Awake() 
         {

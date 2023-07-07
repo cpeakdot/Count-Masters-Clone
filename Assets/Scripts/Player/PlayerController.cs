@@ -22,7 +22,7 @@ namespace CMC.Player
         [SerializeField] private float cloneReplacementDuration = .2f;
         private bool canMoveForward = false;
         private CloneController mainClone = null;
-        [SerializeField] private bool useNavMesh = true;
+        private bool useNavMesh = true;
 
         public bool GetCanMoveForward => canMoveForward;
         private List<CloneController> cloneControllerList = new List<CloneController>();
@@ -30,6 +30,8 @@ namespace CMC.Player
 
         private void Start()
         {
+            useNavMesh = GameManager.Instance.useNavMesh;
+
             GetClones();
         }
 

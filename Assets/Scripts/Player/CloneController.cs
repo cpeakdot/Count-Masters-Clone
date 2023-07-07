@@ -4,7 +4,7 @@ using UnityEngine.AI;
 
 namespace CMC.Player
 {
-    public class CloneController : MonoBehaviour
+    public class CloneController : MonoBehaviour, IDamagable
     {
         [SerializeField] private Animator animator;
         [SerializeField] private NavMeshAgent agent;
@@ -79,12 +79,22 @@ namespace CMC.Player
             }
             else if(other.TryGetComponent(out Obstacle obstacle))
             {
-                this.transform.SetParent(null);
-
-                playerController.HandleCloneDie(this);
-
-                cpool.ReleaseObject("clone", this.gameObject);
+                KillThisObject();
             }
+        }
+
+        private void KillThisObject()
+        {
+            this.transform.SetParent(null);
+
+            playerController.HandleCloneDie(this);
+
+            cpool.ReleaseObject("clone", this.gameObject);
+        }
+
+        public void Damage()
+        {
+            KillThisObject();
         }
     }
 }
