@@ -47,9 +47,14 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   cpool: {fileID: 0}
   swerveInput: {fileID: 7011914891210698477}
-  runSpeed: 2
+  cloneParentTransform: {fileID: 8970867304785628999}
+  runSpeed: 3
   rotationSpeed: 180
   swerveSpeed: 1
+  distanceBtwClones: 0.8
+  radiusOfClones: 1
+  cloneReplacementDuration: 1
+  useNavMesh: 1
 --- !u!114 &7011914891210698477
 MonoBehaviour:
   m_ObjectHideFlags: 0

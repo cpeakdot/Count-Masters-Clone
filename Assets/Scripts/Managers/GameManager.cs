@@ -21,6 +21,9 @@ namespace CMC
             {
                 Destroy(this);
             }
+
+            Application.targetFrameRate = 60;
+            Input.multiTouchEnabled = false;
         }
 
         private void Update() 
@@ -33,6 +36,13 @@ namespace CMC
                 
                 OnGameStateChange?.Invoke(gameState);
             }
+        }
+
+        public void SetGameState(GameState newGameState, bool hasWon = false)
+        {
+            gameState = newGameState;
+
+            OnGameStateChange?.Invoke(gameState);
         }
     }
 

@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 147766564847687411}
   - component: {fileID: 2106481516155452318}
   - component: {fileID: 8144536507147974424}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Gate
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -47,9 +47,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d56480de03ca05541af75ab49188cb8b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  coll: {fileID: 8144536507147974424}
   gateText: {fileID: 2884487843329044006}
   minValue: 1
   maxValue: 10
+  nearbyGateDetectionSize: {x: 20, y: 5, z: 1}
+  gateLayerMask:
+    serializedVersion: 2
+    m_Bits: 64
 --- !u!65 &8144536507147974424
 BoxCollider:
   m_ObjectHideFlags: 0

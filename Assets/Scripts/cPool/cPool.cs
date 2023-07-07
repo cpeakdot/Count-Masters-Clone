@@ -41,7 +41,7 @@ namespace cpeak.cPool
 
                 for (int i = 0; i < pool.size; i++)
                 {
-                    GameObject newObj = Instantiate(pool.prefab, parent.transform);
+                        GameObject newObj = Instantiate(pool.prefab, parent.transform);
                     newObj.SetActive(false);
                     objectPool.Enqueue(newObj);
                 }
