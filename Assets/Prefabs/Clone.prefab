@@ -49,6 +49,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animator: {fileID: 8218586469960125841}
   agent: {fileID: 3052282893713954977}
+  enemyLayerMask:
+    serializedVersion: 2
+    m_Bits: 256
+  enemyScanRadius: 5
+  attackRange: 1
+  gatherAroundPlayerObjIteration: 0
 --- !u!136 &1976883080808381899
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -89,8 +95,8 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 0.7
-  m_Speed: 3.5
-  m_Acceleration: 200
+  m_Speed: 1
+  m_Acceleration: 1
   avoidancePriority: 50
   m_AngularSpeed: 0
   m_StoppingDistance: 0
@@ -100,7 +106,7 @@ NavMeshAgent:
   m_Height: 4
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
-  m_ObstacleAvoidanceType: 4
+  m_ObstacleAvoidanceType: 3
 --- !u!1001 &2550406763212877824
 PrefabInstance:
   m_ObjectHideFlags: 0

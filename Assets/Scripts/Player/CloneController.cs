@@ -1,16 +1,30 @@
 using UnityEngine;
 using cpeak.cPool;
 using UnityEngine.AI;
+using CMC.Enemy;
 
 namespace CMC.Player
 {
     public class CloneController : MonoBehaviour, IDamagable
     {
+        [Header("Refs")]
         [SerializeField] private Animator animator;
         [SerializeField] private NavMeshAgent agent;
         private PlayerController playerController;
+        private CloneStates cloneState;
+
+        [SerializeField] private LayerMask enemyLayerMask;
+        [Header("Values")]
+        [SerializeField] private float enemyScanRadius = 5f;
+        [SerializeField] private float attackRange = 1f;
+        [SerializeField] private float gatherAroundPlayerObjIteration = .5f;
+        private float gatherAroundPlayerTimer = 0f;
+        private Collider[] enemyArray = new Collider[1];
+        private EnemyController targetEnemy = null;
         private bool canMove = false;
         private cPool cpool;
+
+        public NavMeshAgent GetAgent => agent;
 
         private void Start() 
         {
@@ -19,11 +33,33 @@ namespace CMC.Player
             cpool = cPool.instance;
         }
 
-        private void FixedUpdate() 
+        private void Update() 
         {
-            if (!canMove) { return; }
+            switch (cloneState)
+            {
+                case CloneStates.Scanning:
+                    
+                    if (!canMove) { return; }
 
-            agent.SetDestination(transform.position + Vector3.forward);
+                    //agent.SetDestination(transform.position + Vector3.forward);
+                    //agent.SetDestination(playerController.transform.position);
+
+                    ScanEnemies();
+
+                    GatherAroundPlayer();
+
+                    break;
+                case CloneStates.Attacking:
+
+                    if (targetEnemy.isActiveAndEnabled) { return; }
+
+                    StartState(CloneStates.Scanning);
+
+                    break;
+                default:
+                    break;
+            }
+           
         }
 
         private void OnEnable() 
@@ -95,6 +131,62 @@ namespace CMC.Player
         public void Damage()
         {
             KillThisObject();
+        }
+
+        private void Attack()
+        {
+            if(!targetEnemy.enabled)
+            {
+                StartState(CloneStates.Scanning);
+                return;
+            }
+
+            if(Vector3.Distance(transform.position, targetEnemy.transform.position) <= attackRange)
+            {
+                targetEnemy.Damage();
+                this.Damage();
+            }
+            else
+            {
+                agent.SetDestination(targetEnemy.transform.position);
+            }
+        }
+
+        private void GatherAroundPlayer()
+        {
+            gatherAroundPlayerTimer += Time.deltaTime;
+            if(gatherAroundPlayerTimer >= gatherAroundPlayerObjIteration)
+            {
+                gatherAroundPlayerTimer = 0f;
+                agent.SetDestination(playerController.transform.position);
+            }
+        }
+
+        private void ScanEnemies()
+        {
+            if (Physics.OverlapSphereNonAlloc(transform.position, enemyScanRadius, enemyArray, enemyLayerMask) < 1) { return; }
+
+            StartState(CloneStates.Attacking);
+        }
+
+        private void StartState(CloneStates newCloneState)
+        {
+            if (newCloneState == cloneState) { return; }
+
+            cloneState = newCloneState;
+
+            switch (cloneState)
+            {
+                case CloneStates.Scanning:
+                    break;
+                case CloneStates.Attacking:
+
+                    targetEnemy = enemyArray[0].GetComponent<EnemyController>();
+
+                    break;
+                default:
+                    break;
+            }
         }
     }
 }

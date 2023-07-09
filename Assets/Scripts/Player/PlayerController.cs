@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using cpeak.cPool;
 using DG.Tweening;
 using System;
+using Cinemachine;
 
 namespace CMC.Player
 {
@@ -12,6 +13,7 @@ namespace CMC.Player
         [SerializeField] private cPool cpool;
         [SerializeField] private SwerveInput swerveInput;
         [SerializeField] private Transform cloneParentTransform;
+        [SerializeField] private CinemachineVirtualCamera virtualCamera;
 
         [Header("Values")]
         [SerializeField] private float runSpeed = 2f;
@@ -68,7 +70,6 @@ namespace CMC.Player
 
         private void MoveForward()
         {
-            if (useNavMesh) { return; }
             transform.position += Vector3.forward * (Time.deltaTime * runSpeed);
         }
 
@@ -101,6 +102,8 @@ namespace CMC.Player
             if (clone == mainClone && currentCloneCount > 0)
             {
                 mainClone = cloneControllerList[0];
+
+                //virtualCamera.m_Follow = mainClone.transform;
             }
             else if (currentCloneCount == 0)
             {
@@ -117,9 +120,6 @@ namespace CMC.Player
         {
             if(useNavMesh)
             {
-                // Vector3 randomPosition = UnityEngine.Random.insideUnitSphere * radiusOfClones;
-                // randomPosition.y = 0f;
-                // cloneControllerList[cloneControllerList.Count - 1].transform.DOLocalMove(randomPosition, cloneReplacementDuration).SetEase(Ease.OutBack);
                 return;
             }
             for (int i = 0; i < cloneControllerList.Count; i++)

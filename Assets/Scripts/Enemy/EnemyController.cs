@@ -69,6 +69,7 @@ namespace CMC.Enemy
             if(Vector3.Distance(transform.position, targetClone.transform.position) <= attackRange)
             {
                 targetClone.Damage();
+                this.Damage();
             }
             else
             {
