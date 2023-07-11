@@ -49,12 +49,18 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   animator: {fileID: 8218586469960125841}
   agent: {fileID: 3052282893713954977}
+  rigidBody: {fileID: 2240432448555910663}
+  coll: {fileID: 1976883080808381899}
   enemyLayerMask:
     serializedVersion: 2
     m_Bits: 256
   enemyScanRadius: 5
   attackRange: 1
   gatherAroundPlayerObjIteration: 0
+  runningStateAgentSpeed: 1
+  attackingStateAgentSpeed: 7
+  runningStateAgentAcceleration: 100
+  attackingStateAgentAcceleration: 200
 --- !u!136 &1976883080808381899
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -77,7 +83,7 @@ Rigidbody:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8411967146200504943}
   serializedVersion: 2
-  m_Mass: 1
+  m_Mass: 10
   m_Drag: 0
   m_AngularDrag: 0.05
   m_UseGravity: 1
@@ -106,7 +112,7 @@ NavMeshAgent:
   m_Height: 4
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
-  m_ObstacleAvoidanceType: 3
+  m_ObstacleAvoidanceType: 2
 --- !u!1001 &2550406763212877824
 PrefabInstance:
   m_ObjectHideFlags: 0

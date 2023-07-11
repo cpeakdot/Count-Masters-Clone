@@ -4,6 +4,8 @@ using cpeak.cPool;
 using DG.Tweening;
 using System;
 using Cinemachine;
+using TMPro;
+using CMC.Enemy;
 
 namespace CMC.Player
 {
@@ -14,17 +16,27 @@ namespace CMC.Player
         [SerializeField] private SwerveInput swerveInput;
         [SerializeField] private Transform cloneParentTransform;
         [SerializeField] private CinemachineVirtualCamera virtualCamera;
+        [SerializeField] private TMP_Text countText;
+        [SerializeField] private LayerMask enemyLayerMask;
 
         [Header("Values")]
         [SerializeField] private float runSpeed = 2f;
         [SerializeField] private float rotationSpeed = 180f;
         [SerializeField] private float swerveSpeed = 1f;
+        [SerializeField] private float enemyScanRadius = 5f;
         [Range(0f, 1f),SerializeField] private float distanceBtwClones = 1f;
         [Range(0f, 3f),SerializeField] private float radiusOfClones = 1f;
         [SerializeField] private float cloneReplacementDuration = .2f;
+        private Collider[] enemyArray = new Collider[1];
+        private bool areClonesOnAttackState = false;
+        private float enemyScanRadiusCalculated = 5f;
         private bool canMoveForward = false;
         private CloneController mainClone = null;
         private bool useNavMesh = true;
+        /// <summary>
+        /// Used to count the calls from clones
+        /// </summary>
+        private int cloneCounterOnStartMovement = 0;
 
         public bool GetCanMoveForward => canMoveForward;
         private List<CloneController> cloneControllerList = new List<CloneController>();
@@ -35,10 +47,14 @@ namespace CMC.Player
             useNavMesh = GameManager.Instance.useNavMesh;
 
             GetClones();
+
+            enemyScanRadiusCalculated = GetAdditionalEnemyScanRadius(cloneControllerList.Count) + enemyScanRadius;
         }
 
         private void Update() 
         {
+            ScanEnemies();
+
             if (!canMoveForward) { return; }
             
             MoveForward();
@@ -78,6 +94,33 @@ namespace CMC.Player
             transform.position += (Vector3.right * swerveInput.changeOnX) * (Time.deltaTime * swerveSpeed);
         }
 
+        private void ScanEnemies()
+        {
+            if (Physics.OverlapSphereNonAlloc(transform.position, enemyScanRadiusCalculated, enemyArray, enemyLayerMask) < 1) 
+            {
+                if(areClonesOnAttackState)
+                {
+                    for (int i = 0; i < cloneControllerList.Count; i++)
+                    {
+                        cloneControllerList[i].StartState(CloneStates.Running);
+                    }
+                    StartMovement();
+                }
+                return;
+            }
+
+            if (!enemyArray[0].TryGetComponent(out EnemyController enemyController)) { return; }
+
+            StopMovement();
+
+            areClonesOnAttackState = true;
+
+            for (int i = 0; i < cloneControllerList.Count; i++)
+            {
+                cloneControllerList[i].AttackEnemies(enemyController);
+            }
+        }
+
         private bool TryAddCloneToList(GameObject cloneInstance)
         {
             if(cloneInstance.TryGetComponent(out CloneController clone))
@@ -85,6 +128,10 @@ namespace CMC.Player
                 cloneControllerList.Add(clone);
 
                 FormatTheShapeOfTheClones();
+
+                enemyScanRadiusCalculated = GetAdditionalEnemyScanRadius(cloneControllerList.Count) + enemyScanRadius;
+
+                UpdateCountText();
 
                 return true;
             }
@@ -97,13 +144,15 @@ namespace CMC.Player
         {
             cloneControllerList.Remove(clone);
 
+            UpdateCountText();
+
+            enemyScanRadiusCalculated = GetAdditionalEnemyScanRadius(cloneControllerList.Count) + enemyScanRadius;
+
             int currentCloneCount = cloneControllerList.Count;
 
             if (clone == mainClone && currentCloneCount > 0)
             {
                 mainClone = cloneControllerList[0];
-
-                //virtualCamera.m_Follow = mainClone.transform;
             }
             else if (currentCloneCount == 0)
             {
@@ -114,6 +163,20 @@ namespace CMC.Player
             if (useNavMesh) { return; }
             
             FormatTheShapeOfTheClones();
+        }
+
+        private float GetAdditionalEnemyScanRadius(int cloneCount)
+        {
+            if (cloneCount < 10) { return 0; }
+
+            float additionalRadius = cloneCount / 30;
+
+            return additionalRadius;
+        }
+
+        private void UpdateCountText()
+        {
+            countText.text = cloneControllerList.Count.ToString();
         }
 
         private void FormatTheShapeOfTheClones()
@@ -154,7 +217,13 @@ namespace CMC.Player
             
             for (int i = 0; i < amountToBeSpawned; i++)
             {
-                GameObject cloneInstance = cpool.GetPoolObject("clone", mainClone.transform.position, Quaternion.identity);
+                float randomPositionRadius = 1f;
+
+                Vector3 randomPos = UnityEngine.Random.insideUnitSphere * randomPositionRadius + transform.position;
+
+                randomPos.y = transform.position.y;
+
+                GameObject cloneInstance = cpool.GetPoolObject("clone", randomPos, Quaternion.identity);
 
                 cloneInstance.transform.SetParent(cloneParentTransform);
 
@@ -163,6 +232,16 @@ namespace CMC.Player
                 Debug.LogWarning($"<color=yellow>Failed to add the clone instance to the list</color>", cloneInstance);
             }
 
+        }
+
+        public void StopMovement()
+        {
+            canMoveForward = false;
+        }
+
+        public void StartMovement()
+        {
+            canMoveForward = true;
         }
 
         private void HandleOnGameStateChange(GameState gameState)
@@ -181,6 +260,14 @@ namespace CMC.Player
                     break;
             }
         }
+
+#if UNITY_EDITOR
+        private void OnDrawGizmosSelected() 
+        {
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawWireSphere(transform.position, (Application.isPlaying) ? enemyScanRadiusCalculated : enemyScanRadius);
+        }
+#endif
     }
 }
 

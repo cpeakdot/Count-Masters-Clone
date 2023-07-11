@@ -10,14 +10,20 @@ namespace CMC.Player
         [Header("Refs")]
         [SerializeField] private Animator animator;
         [SerializeField] private NavMeshAgent agent;
+        [SerializeField] private Rigidbody rigidBody;
+        [SerializeField] private Collider coll;
         private PlayerController playerController;
         private CloneStates cloneState;
-
         [SerializeField] private LayerMask enemyLayerMask;
+
         [Header("Values")]
         [SerializeField] private float enemyScanRadius = 5f;
         [SerializeField] private float attackRange = 1f;
         [SerializeField] private float gatherAroundPlayerObjIteration = .5f;
+        [SerializeField] private float runningStateAgentSpeed = 1f;
+        [SerializeField] private float attackingStateAgentSpeed = 3f;
+        [SerializeField] private float runningStateAgentAcceleration = 1f;
+        [SerializeField] private float attackingStateAgentAcceleration = 200f;
         private float gatherAroundPlayerTimer = 0f;
         private Collider[] enemyArray = new Collider[1];
         private EnemyController targetEnemy = null;
@@ -37,24 +43,30 @@ namespace CMC.Player
         {
             switch (cloneState)
             {
-                case CloneStates.Scanning:
+                case CloneStates.Running:
                     
                     if (!canMove) { return; }
 
                     //agent.SetDestination(transform.position + Vector3.forward);
                     //agent.SetDestination(playerController.transform.position);
 
-                    ScanEnemies();
-
                     GatherAroundPlayer();
 
                     break;
                 case CloneStates.Attacking:
 
-                    if (targetEnemy.isActiveAndEnabled) { return; }
+                    if (!targetEnemy.isActiveAndEnabled) { return; }
 
-                    StartState(CloneStates.Scanning);
+                    agent.SetDestination(targetEnemy.transform.position);
 
+                    Attack();
+
+                    break;
+                case CloneStates.Falling:
+                    if(transform.position.y <= -1f)
+                    {
+                        KillThisObject();
+                    }
                     break;
                 default:
                     break;
@@ -109,6 +121,11 @@ namespace CMC.Player
 
         private void OnTriggerEnter(Collider other) 
         {
+            if(other.CompareTag("MovingPlatform"))
+            {
+                Fall();
+                return;
+            }
             if(other.TryGetComponent(out Gate gate))
             {
                 playerController.HandleOnTriggerGate(gate);
@@ -119,11 +136,26 @@ namespace CMC.Player
             }
         }
 
+        // private void OnCollisionEnter(Collision other) 
+        // {
+        //     if (!other.transform.TryGetComponent(out EnemyController enemy)) { return; }
+
+        //     enemy.Damage();
+        //     KillThisObject();
+        // }
+
+        private void Fall()
+        {
+            StartState(CloneStates.Falling);
+        }
+
         private void KillThisObject()
         {
             this.transform.SetParent(null);
 
             playerController.HandleCloneDie(this);
+
+            cpool.GetPoolObject("deathParticleClone", transform.position, Quaternion.identity, true, 2f);
 
             cpool.ReleaseObject("clone", this.gameObject);
         }
@@ -137,7 +169,7 @@ namespace CMC.Player
         {
             if(!targetEnemy.enabled)
             {
-                StartState(CloneStates.Scanning);
+                StartState(CloneStates.Running);
                 return;
             }
 
@@ -154,36 +186,67 @@ namespace CMC.Player
 
         private void GatherAroundPlayer()
         {
+            if (cloneState == CloneStates.Falling) { return; }
+
             gatherAroundPlayerTimer += Time.deltaTime;
+
             if(gatherAroundPlayerTimer >= gatherAroundPlayerObjIteration)
             {
                 gatherAroundPlayerTimer = 0f;
+
                 agent.SetDestination(playerController.transform.position);
             }
         }
 
-        private void ScanEnemies()
+        public void AttackEnemies(EnemyController enemyController)
         {
-            if (Physics.OverlapSphereNonAlloc(transform.position, enemyScanRadius, enemyArray, enemyLayerMask) < 1) { return; }
+            if (cloneState == CloneStates.Falling) { return; }
+
+            targetEnemy = enemyController;
 
             StartState(CloneStates.Attacking);
         }
 
-        private void StartState(CloneStates newCloneState)
+        public void StartState(CloneStates newCloneState)
         {
+            if (cloneState == CloneStates.Falling) { return; }
+
             if (newCloneState == cloneState) { return; }
 
             cloneState = newCloneState;
 
             switch (cloneState)
             {
-                case CloneStates.Scanning:
+                case CloneStates.Running:
+
+                    agent.SetDestination(playerController.transform.position);
+
+                    agent.acceleration = runningStateAgentAcceleration;
+
+                    agent.speed = runningStateAgentSpeed;
+
                     break;
+
                 case CloneStates.Attacking:
 
-                    targetEnemy = enemyArray[0].GetComponent<EnemyController>();
+                    agent.acceleration = attackingStateAgentAcceleration;
+
+                    agent.speed = attackingStateAgentSpeed;
 
                     break;
+
+                case CloneStates.Falling:
+
+                    transform.SetParent(null);
+
+                    coll.isTrigger = true;
+
+                    rigidBody.isKinematic = false;
+
+                    agent.enabled = false;
+
+                    break;
+
                 default:
                     break;
             }

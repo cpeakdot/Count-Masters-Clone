@@ -1,6 +1,7 @@
 
 public enum CloneStates
 {
-    Scanning,
-    Attacking
+    Running,
+    Attacking,
+    Falling
 }

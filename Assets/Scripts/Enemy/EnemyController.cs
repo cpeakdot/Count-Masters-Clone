@@ -60,7 +60,7 @@ namespace CMC.Enemy
 
         private void Attack()
         {
-            if(!targetClone.enabled)
+            if(!targetClone.isActiveAndEnabled)
             {
                 StartState(EnemyState.Scanning);
                 return;
@@ -79,6 +79,8 @@ namespace CMC.Enemy
 
         public void Damage()
         {
+            cPool.instance.GetPoolObject("deathParticleEnemy", transform.position, Quaternion.identity, true, 2f);
+
             cPool.instance.ReleaseObject("enemy", this.gameObject);
         }
 
