@@ -5,10 +5,11 @@ namespace CMC
 {
     public class Gate : MonoBehaviour
     {
-        private GateType gateType;
+        [SerializeField] private GateType gateType;
         [SerializeField] private Collider coll;
         [SerializeField] private TMP_Text gateText;
-        private int value;
+        [SerializeField] private int value;
+        [SerializeField] private bool randomizeValue = false;
         [SerializeField] private int minValue, maxValue;
         [SerializeField] private Vector3 nearbyGateDetectionSize;
         [SerializeField] private LayerMask gateLayerMask;
@@ -23,9 +24,11 @@ namespace CMC
 
         private void InitGate()
         {
-            SetGateType();
-
-            SetGateValue();
+            if(randomizeValue)
+            {
+                SetGateType();
+                SetGateValue();
+            }
 
             SetGateText();
 
@@ -84,6 +87,7 @@ namespace CMC
 
     }
 
+    [System.Serializable]
     public enum GateType
     {
         Multiply,

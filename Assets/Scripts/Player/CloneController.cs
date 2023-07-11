@@ -68,6 +68,8 @@ namespace CMC.Player
                         KillThisObject();
                     }
                     break;
+                case CloneStates.FinishSequence:
+                    break;
                 default:
                     break;
             }
@@ -126,6 +128,19 @@ namespace CMC.Player
                 Fall();
                 return;
             }
+            else if(other.CompareTag("Stair"))
+            {
+                rigidBody.isKinematic = false;
+
+                transform.SetParent(null);
+
+                return;
+            }
+            else if(other.CompareTag("Finish"))
+            {
+                FinishSequenceManager.Instance.InitSequence();
+                return;
+            }
             if(other.TryGetComponent(out Gate gate))
             {
                 playerController.HandleOnTriggerGate(gate);
@@ -135,14 +150,6 @@ namespace CMC.Player
                 KillThisObject();
             }
         }
-
-        // private void OnCollisionEnter(Collision other) 
-        // {
-        //     if (!other.transform.TryGetComponent(out EnemyController enemy)) { return; }
-
-        //     enemy.Damage();
-        //     KillThisObject();
-        // }
 
         private void Fall()
         {
@@ -158,6 +165,11 @@ namespace CMC.Player
             cpool.GetPoolObject("deathParticleClone", transform.position, Quaternion.identity, true, 2f);
 
             cpool.ReleaseObject("clone", this.gameObject);
+        }
+
+        public void DisableAgentMovement()
+        {
+            agent.enabled = false;
         }
 
         public void Damage()
@@ -209,7 +221,8 @@ namespace CMC.Player
 
         public void StartState(CloneStates newCloneState)
         {
-            if (cloneState == CloneStates.Falling) { return; }
+            if (cloneState == CloneStates.Falling 
+            || cloneState == CloneStates.FinishSequence) { return; }
 
             if (newCloneState == cloneState) { return; }
 
@@ -245,6 +258,10 @@ namespace CMC.Player
 
                     agent.enabled = false;
 
+                    break;
+                
+                case CloneStates.FinishSequence:
+                    Debug.Log("Finish Sequence State");
                     break;
 
                 default:

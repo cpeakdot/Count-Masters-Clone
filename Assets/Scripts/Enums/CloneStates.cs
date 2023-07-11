@@ -3,5 +3,6 @@ public enum CloneStates
 {
     Running,
     Attacking,
-    Falling
+    Falling,
+    FinishSequence
 }

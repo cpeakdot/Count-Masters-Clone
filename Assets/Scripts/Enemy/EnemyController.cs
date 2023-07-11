@@ -15,6 +15,12 @@ namespace CMC.Enemy
         private Collider[] cloneArray = new Collider[1];
         private CloneController targetClone = null;
         [SerializeField] private EnemyState enemyState;
+        private EnemyGroup enemyGroup;
+
+        private void Start() 
+        {
+            enemyGroup = GetComponentInParent<EnemyGroup>();
+        }
 
         private void Update() 
         {
@@ -79,6 +85,8 @@ namespace CMC.Enemy
 
         public void Damage()
         {
+            enemyGroup.HandleOnCloneDie(this);
+
             cPool.instance.GetPoolObject("deathParticleEnemy", transform.position, Quaternion.identity, true, 2f);
 
             cPool.instance.ReleaseObject("enemy", this.gameObject);

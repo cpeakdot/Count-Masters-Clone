@@ -31,16 +31,13 @@ namespace CMC.Player
         private bool areClonesOnAttackState = false;
         private float enemyScanRadiusCalculated = 5f;
         private bool canMoveForward = false;
+        private bool canSwerve = true;
         private CloneController mainClone = null;
         private bool useNavMesh = true;
-        /// <summary>
-        /// Used to count the calls from clones
-        /// </summary>
-        private int cloneCounterOnStartMovement = 0;
-
-        public bool GetCanMoveForward => canMoveForward;
         private List<CloneController> cloneControllerList = new List<CloneController>();
         public event Action<bool> OnPlayerMovement;
+        public bool GetCanMoveForward => canMoveForward;
+        public List<CloneController> GetCloneControllerList => cloneControllerList;
 
         private void Start()
         {
@@ -58,6 +55,8 @@ namespace CMC.Player
             if (!canMoveForward) { return; }
             
             MoveForward();
+
+            if (!canSwerve) { return; }
 
             Swerve();
         }
@@ -96,9 +95,9 @@ namespace CMC.Player
 
         private void ScanEnemies()
         {
-            if (Physics.OverlapSphereNonAlloc(transform.position, enemyScanRadiusCalculated, enemyArray, enemyLayerMask) < 1) 
+            if (Physics.OverlapSphereNonAlloc(transform.position, enemyScanRadiusCalculated, enemyArray, enemyLayerMask) < 1)
             {
-                if(areClonesOnAttackState)
+                if (areClonesOnAttackState)
                 {
                     for (int i = 0; i < cloneControllerList.Count; i++)
                     {
@@ -106,6 +105,7 @@ namespace CMC.Player
                     }
                     StartMovement();
                 }
+                CalculateEnemyScanRadius();
                 return;
             }
 
@@ -115,10 +115,17 @@ namespace CMC.Player
 
             areClonesOnAttackState = true;
 
+            enemyScanRadiusCalculated = 20f;
+
             for (int i = 0; i < cloneControllerList.Count; i++)
             {
                 cloneControllerList[i].AttackEnemies(enemyController);
             }
+        }
+
+        private void CalculateEnemyScanRadius()
+        {
+            enemyScanRadiusCalculated = GetAdditionalEnemyScanRadius(cloneControllerList.Count) + enemyScanRadius;
         }
 
         private bool TryAddCloneToList(GameObject cloneInstance)
@@ -129,7 +136,7 @@ namespace CMC.Player
 
                 FormatTheShapeOfTheClones();
 
-                enemyScanRadiusCalculated = GetAdditionalEnemyScanRadius(cloneControllerList.Count) + enemyScanRadius;
+                CalculateEnemyScanRadius();
 
                 UpdateCountText();
 
@@ -242,6 +249,11 @@ namespace CMC.Player
         public void StartMovement()
         {
             canMoveForward = true;
+        }
+
+        public void LockSwerve()
+        {
+            canSwerve = false;
         }
 
         private void HandleOnGameStateChange(GameState gameState)

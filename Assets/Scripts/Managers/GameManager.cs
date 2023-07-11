@@ -1,6 +1,7 @@
 using UnityEngine;
-using UnityEngine.AI;
+using UnityEngine.Events;
 using System;
+using TMPro;
 
 namespace CMC
 {
@@ -11,9 +12,9 @@ namespace CMC
         private GameState gameState;
         public GameState getGameState => gameState;
         public bool useNavMesh = true;
-        [SerializeField] private NavMeshSurface navmeshSurface;
-        [SerializeField] private float navMeshUpdateIteration = .2f;
-        private float navMeshIterationTimer = 0f;
+        [SerializeField] private GameObject finishDisplay;
+        [SerializeField] private TMP_Text finishOverlayText;
+        [SerializeField] private UnityEvent<bool> OnGameEnd;
 
         private void Awake() 
         {
@@ -32,14 +33,6 @@ namespace CMC
 
         private void Update() 
         {
-            navMeshIterationTimer += Time.deltaTime;
-
-            if(navMeshIterationTimer >= navMeshUpdateIteration)
-            {
-                navMeshIterationTimer = 0f;
-                UpdateNavMesh();
-            }
-
             if (gameState != GameState.Not_Started) { return; }
 
             if(Input.GetMouseButtonDown(0))
@@ -49,16 +42,21 @@ namespace CMC
                 OnGameStateChange?.Invoke(gameState);
             }
         }
-        private void UpdateNavMesh()
-        {
-            navmeshSurface.BuildNavMesh();
-        }
 
         public void SetGameState(GameState newGameState, bool hasWon = false)
         {
+            if (gameState == newGameState) { return; }
+
             gameState = newGameState;
 
             OnGameStateChange?.Invoke(gameState);
+
+            if(gameState == GameState.Ended)
+            {
+                finishDisplay.SetActive(true);
+                finishOverlayText.text = hasWon ? "You WON!" : "You LOST!";
+                OnGameEnd?.Invoke(hasWon);
+            }
         }
     }
 
